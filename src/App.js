@@ -9,6 +9,8 @@ function App() {
   const [userSecondName, setUserSecondName] = useState();
   const [userEmail, setUserEmail] = useState();
   const [userCaption, setUserCaption] = useState();
+  const [userListLoading, setUserListLoading] = useState(true);
+  const [errorsObject, setErrorsObject] = useState();
 
   useEffect(() => {
     fetch("https://localhost:5001/api/users")
@@ -19,9 +21,18 @@ function App() {
         console.log(JSON.stringify(data));
         console.log(typeof data);
       });
+
+    sleep(300).then(() => {
+      setUserListLoading(false);
+    });
   }, []);
 
+  const sleep = (waitTimeInMs) =>
+    new Promise((resolve) => setTimeout(resolve, waitTimeInMs));
+
   const createUser = async () => {
+    setUserListLoading(true);
+
     var resp = await fetch("https://localhost:5001/api/users", {
       method: "post",
       headers: { "Content-Type": "application/json; charset=utf-8" },
@@ -33,15 +44,23 @@ function App() {
       }),
     });
 
-    resp = await resp.json();
+    var data = await resp.json();
 
-    var newUserList = [...users, resp];
-    setUsers(newUserList);
+    if (!resp.ok) {
+      setErrorsObject(data.errors);
+    } else {
+      var newUserList = [...users, data];
+      setUsers(newUserList);
 
-    setUserFirstName("");
-    setUserSecondName("");
-    setUserEmail("");
-    setUserCaption("");
+      setUserFirstName("");
+      setUserSecondName("");
+      setUserEmail("");
+      setUserCaption("");
+    }
+
+    sleep(300).then(() => {
+      setUserListLoading(false);
+    });
   };
 
   const handleFirstNameChange = (e) => {
@@ -86,9 +105,18 @@ function App() {
             changeHandler={handleCaptionChange}
           />
           <button onClick={() => createUser()}>Create</button>
+          {errorsObject && (
+            <p className="text-danger">{JSON.stringify(errorsObject)}</p>
+          )}
         </div>
       </div>
-      <Users users={users} />
+      {userListLoading ? (
+        <div className="spinner-border" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      ) : (
+        <Users users={users} />
+      )}
     </>
   );
 }

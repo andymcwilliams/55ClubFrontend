@@ -21,8 +21,8 @@ function App() {
       });
   }, []);
 
-  const createUser = () => {
-    fetch("https://localhost:5001/api/users", {
+  const createUser = async () => {
+    var resp = await fetch("https://localhost:5001/api/users", {
       method: "post",
       headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify({
@@ -31,12 +31,17 @@ function App() {
         emailAddress: userEmail,
         caption: userCaption,
       }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        var newUserList = [...users, data];
-        setUsers(newUserList);
-      });
+    });
+
+    resp = await resp.json();
+
+    var newUserList = [...users, resp];
+    setUsers(newUserList);
+
+    setUserFirstName("");
+    setUserSecondName("");
+    setUserEmail("");
+    setUserCaption("");
   };
 
   const handleFirstNameChange = (e) => {
